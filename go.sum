@@ -81,8 +81,6 @@ github.com/Microsoft/go-winio v0.4.14/go.mod h1:qXqCSQ3Xa7+6tgxaGTIe4Kpcdsi+P8jB
 github.com/Microsoft/go-winio v0.4.16 h1:FtSW/jqD+l4ba5iPBj9CODVtgfYAD8w2wS923g/cFDk=
 github.com/Microsoft/go-winio v0.4.16/go.mod h1:XB6nPKklQyQ7GC9LdcBEcBl8PF76WugXOPRXwdLnMv0=
 github.com/NYTimes/gziphandler v0.0.0-20170623195520-56545f4a5d46/go.mod h1:3wb06e3pkSAbeQ52E9H9iFoQsEEwGN64994WTCIhntQ=
-github.com/OctopusDeploy/go-octopusdeploy v1.7.13 h1:PGaDE/KB5MtVNk+q8AMCzFy93WkHNHFPuaDXxwopdYg=
-github.com/OctopusDeploy/go-octopusdeploy v1.7.13/go.mod h1:Eed6Kp00DepexXb2LTAvxFESH/MTmT6tf+wsAyntaFg=
 github.com/OctopusDeploy/go-octopusdeploy v1.7.14 h1:vIXTi1iP4tMBGIo2oBCRHpSIWx49Z/DZfwB2bK5tpnI=
 github.com/OctopusDeploy/go-octopusdeploy v1.7.14/go.mod h1:Eed6Kp00DepexXb2LTAvxFESH/MTmT6tf+wsAyntaFg=
 github.com/PuerkitoBio/purell v1.0.0/go.mod h1:c11w/QuzBsJSee3cPx9rAFu61PvFxuPbtSwDGJws/X0=
@@ -606,6 +604,8 @@ github.com/stretchr/testify v1.6.1/go.mod h1:6Fq8oRcR53rry900zMqJjRRixrwX3KX962/
 github.com/stretchr/testify v1.7.0 h1:nwc3DEeHmmLAfoZucVR881uASk0Mfjw8xYJ99tb5CcY=
 github.com/stretchr/testify v1.7.0/go.mod h1:6Fq8oRcR53rry900zMqJjRRixrwX3KX962/h/Wwjteg=
 github.com/tmc/grpc-websocket-proxy v0.0.0-20170815181823-89b8d40f7ca8/go.mod h1:ncp9v5uamzpCO7NfCPTXjqaC+bZgJeR0sMTm6dMHP7U=
+github.com/transactcampus/go-octopusdeploy v1.7.14-tc h1:3ilo8r63MIE4qhihCWWKJfR8cHaceyBszFPxDtmQ5nI=
+github.com/transactcampus/go-octopusdeploy v1.7.14-tc/go.mod h1:Le67kLNSdQCftj+NH4lN6LrAHOKxhpJZNQEyBUsAf3I=
 github.com/ugorji/go/codec v0.0.0-20181204163529-d75b2dcb6bc8/go.mod h1:VFNgLljTbGfSG7qAOspJ7OScBnGdDN/yBr0sguwnwf0=
 github.com/ulikunitz/xz v0.5.5/go.mod h1:2bypXElzHzzJZwzH67Y6wb67pO62Rzfn7BSiF4ABRW8=
 github.com/ulikunitz/xz v0.5.8/go.mod h1:nbz6k7qbPmH4IRqmfOplQw/tblSgqTqBwxkY0oWt/14=
