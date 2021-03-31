@@ -3,7 +3,7 @@ package octopusdeploy
 import (
 	"testing"
 
-	"github.com/OctopusDeploy/go-octopusdeploy/octopusdeploy"
+	"github.com/transactcampus/go-octopusdeploy/octopusdeploy"
 	"github.com/stretchr/testify/require"
 )
 

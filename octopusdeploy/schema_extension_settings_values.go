@@ -1,6 +1,6 @@
 package octopusdeploy
 
-import "github.com/OctopusDeploy/go-octopusdeploy/octopusdeploy"
+import "github.com/transactcampus/go-octopusdeploy/octopusdeploy"
 
 func expandExtensionSettingsValues(extensionSettingsValues []interface{}) []*octopusdeploy.ExtensionSettingsValues {
 	expandedExtensionSettingsValues := make([]*octopusdeploy.ExtensionSettingsValues, len(extensionSettingsValues))
