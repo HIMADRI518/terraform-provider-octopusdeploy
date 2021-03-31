@@ -1,8 +1,8 @@
 package octopusdeploy
 
 import (
-	"github.com/transactcampus/go-octopusdeploy/octopusdeploy"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/transactcampus/go-octopusdeploy/octopusdeploy"
 )
 
 func expandRunbookProcess(d *schema.ResourceData) *octopusdeploy.RunbookProcess {
@@ -13,7 +13,7 @@ func expandRunbookProcess(d *schema.ResourceData) *octopusdeploy.RunbookProcess 
 		steps := v.([]interface{})
 		for _, step := range steps {
 			runbookStep := expandDeploymentStep(step.(map[string]interface{}))
-			runbookProcess.Steps = append(runbookProcess.Steps, runbookStep)
+			runbookProcess.Steps = append(runbookProcess.Steps, *runbookStep)
 		}
 	}
 

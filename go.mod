@@ -1,11 +1,9 @@
-module github.com/OctopusDeploy/terraform-provider-octopusdeploy
+module github.com/transactcampus/terraform-provider-octopusdeploy
 
 require (
 	cloud.google.com/go v0.76.0 // indirect
 	cloud.google.com/go/storage v1.13.0 // indirect
 	github.com/Microsoft/go-winio v0.4.16 // indirect
-	github.com/OctopusDeploy/go-octopusdeploy v1.7.14
-    github.com/transactcampus/go-octopusdeploy v1.7.14-tc
 	github.com/agext/levenshtein v1.2.3 // indirect
 	github.com/anmitsu/go-shlex v0.0.0-20200514113438-38f4b401e2be // indirect
 	github.com/apparentlymart/go-cidr v1.1.0 // indirect
@@ -30,12 +28,14 @@ require (
 	github.com/jinzhu/copier v0.2.8
 	github.com/kevinburke/ssh_config v0.0.0-20201106050909-4977a11b4351 // indirect
 	github.com/klauspost/compress v1.11.7 // indirect
+	github.com/leodido/go-urn v1.2.1 // indirect
 	github.com/mitchellh/copystructure v1.1.1 // indirect
 	github.com/mitchellh/go-testing-interface v1.14.1 // indirect
 	github.com/mitchellh/go-wordwrap v1.0.1 // indirect
 	github.com/mitchellh/mapstructure v1.4.1 // indirect
 	github.com/oklog/run v1.1.0 // indirect
 	github.com/stretchr/testify v1.7.0
+	github.com/transactcampus/go-octopusdeploy v1.7.14-tc
 	github.com/ulikunitz/xz v0.5.10 // indirect
 	github.com/xanzy/ssh-agent v0.3.0 // indirect
 	github.com/zclconf/go-cty v1.8.1 // indirect
