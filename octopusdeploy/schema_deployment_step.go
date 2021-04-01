@@ -3,9 +3,9 @@ package octopusdeploy
 import (
 	"strings"
 
-	"github.com/transactcampus/go-octopusdeploy/octopusdeploy"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	"github.com/transactcampus/go-octopusdeploy/octopusdeploy"
 )
 
 func expandDeploymentStep(flattenedStep map[string]interface{}) *octopusdeploy.DeploymentStep {
@@ -97,6 +97,13 @@ func expandDeploymentStep(flattenedStep map[string]interface{}) *octopusdeploy.D
 		}
 	}
 
+	if v, ok := flattenedStep["deploy_transact_jira_gate_action"]; ok {
+		for _, tfAction := range v.([]interface{}) {
+			action := expandDeployTransactJiraGateAction(tfAction.(map[string]interface{}))
+			step.Actions = append(step.Actions, action)
+		}
+	}
+
 	return step
 }
 
@@ -142,6 +149,8 @@ func flattenDeploymentSteps(deploymentSteps []octopusdeploy.DeploymentStep) []ma
 				flattenedDeploymentSteps[key]["apply_terraform_action"] = []interface{}{flattenApplyTerraformAction(action)}
 			case "Octopus.WindowsService":
 				flattenedDeploymentSteps[key]["deploy_windows_service_action"] = []interface{}{flattenDeployWindowsServiceAction(action)}
+			case "Octopus.TransactJiraGate":
+				flattenedDeploymentSteps[key]["deploy_transact_jira_gate_action"] = []interface{}{flattenDeployTransactJiraGateAction(action)}
 			default:
 				flattenedDeploymentSteps[key]["action"] = []interface{}{flattenDeploymentAction(action)}
 			}
@@ -175,12 +184,13 @@ func getDeploymentStepSchema() *schema.Schema {
 					Optional:    true,
 					Type:        schema.TypeString,
 				},
-				"deploy_kubernetes_secret_action": getDeployKubernetesSecretActionSchema(),
-				"deploy_package_action":           getDeployPackageActionSchema(),
-				"deploy_windows_service_action":   getDeployWindowsServiceActionSchema(),
-				"id":                              getIDSchema(),
-				"manual_intervention_action":      getManualInterventionActionSchema(),
-				"name":                            getNameSchema(true),
+				"deploy_kubernetes_secret_action":  getDeployKubernetesSecretActionSchema(),
+				"deploy_package_action":            getDeployPackageActionSchema(),
+				"deploy_windows_service_action":    getDeployWindowsServiceActionSchema(),
+				"deploy_transact_jira_gate_action": getDeployTransactJiraGateActionSchema(),
+				"id":                               getIDSchema(),
+				"manual_intervention_action":       getManualInterventionActionSchema(),
+				"name":                             getNameSchema(true),
 				"package_requirement": {
 					Default:     "LetOctopusDecide",
 					Description: "Whether to run this step before or after package acquisition (if possible)",
