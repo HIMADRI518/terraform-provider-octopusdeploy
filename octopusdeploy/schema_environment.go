@@ -3,8 +3,8 @@ package octopusdeploy
 import (
 	"context"
 
-	"github.com/transactcampus/go-octopusdeploy/octopusdeploy"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/transactcampus/go-octopusdeploy/octopusdeploy"
 )
 
 func expandEnvironment(d *schema.ResourceData) *octopusdeploy.Environment {
@@ -77,8 +77,10 @@ func getEnvironmentSchema() map[string]*schema.Schema {
 		"id":          getIDSchema(),
 		"name":        getNameSchema(true),
 		"sort_order": {
-			Computed: true,
+			//Computed: true,
 			Type:     schema.TypeInt,
+			Optional: true,
+			Default:  false,
 		},
 		"use_guided_failure": {
 			Optional: true,
