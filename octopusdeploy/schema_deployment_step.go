@@ -143,7 +143,6 @@ func flattenDeploymentSteps(deploymentSteps []octopusdeploy.DeploymentStep) []ma
 				flattenedDeploymentSteps[key]["manual_intervention_action"] = []interface{}{flattenManualInterventionAction(action)}
 			case "Octopus.Script":
 				flattenedDeploymentSteps[key]["run_script_action"] = []interface{}{flattenRunScriptAction(action)}
-				flattenedDeploymentSteps[key]["action"] = []interface{}{flattenDeploymentAction(action)}
 			case "Octopus.TentaclePackage":
 				flattenedDeploymentSteps[key]["deploy_package_action"] = []interface{}{flattenDeployPackageAction(action)}
 			case "Octopus.TerraformApply":
