@@ -3,8 +3,8 @@ package octopusdeploy
 import (
 	"strconv"
 
-	"github.com/transactcampus/go-octopusdeploy/octopusdeploy"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/transactcampus/go-octopusdeploy/octopusdeploy"
 )
 
 func addPrimaryPackageSchema(element *schema.Resource, required bool) error {
@@ -29,7 +29,7 @@ func addPackagesSchema(element *schema.Resource, primaryIsRequired bool) {
 
 	packageElementSchema["name"] = &schema.Schema{
 		Description: "The name of the package",
-		Required:    true,
+		Optional:    true,
 		Type:        schema.TypeString,
 	}
 
