@@ -11,18 +11,13 @@ func expandDeployTransactJiraGateAction(flattenedAction map[string]interface{}) 
 	action := expandAction(flattenedAction)
 	action.ActionType = "Octopus.TransactJiraGate"
 
-	action.Properties["Octopus.Action.JiraGate.AuthKey"] = flattenedAction["auth_key"].(string)
+	action.Properties["Octopus.Action.JiraGate.AuthKey"] = octopusdeploy.NewPropertyValue(flattenedAction["auth_key"].(string), false)
 
 	if tfRequiredStatusValues, ok := flattenedAction["required_status"]; ok {
-		requiredStatusValues := make(map[string]string)
-
-		for _, tfValue := range tfRequiredStatusValues.([]interface{}) {
-			tfValueTyped := tfValue.(map[string]interface{})
-			requiredStatusValues[tfValueTyped["key"].(string)] = tfValueTyped["value"].(string)
-		}
+		requiredStatusValues := tfRequiredStatusValues.(map[string]interface{})
 
 		j, _ := json.Marshal(requiredStatusValues)
-		action.Properties["Octopus.Action.JiraGate.RequiredStatus"] = string(j)
+		action.Properties["Octopus.Action.JiraGate.RequiredStatus"] = octopusdeploy.NewPropertyValue(string(j), false)
 	}
 
 	return action
@@ -32,52 +27,32 @@ func flattenDeployTransactJiraGateAction(action octopusdeploy.DeploymentAction) 
 	flattenedAction := flattenAction(action)
 
 	if v, ok := action.Properties["Octopus.Action.JiraGate.AuthKey"]; ok {
-		flattenedAction["auth_key"] = v
+		flattenedAction["auth_key"] = v.Value
 	}
 
 	if v, ok := action.Properties["Octopus.Action.JiraGate.RequiredStatus"]; ok {
 		var requiredStatusValues map[string]string
-		json.Unmarshal([]byte(v), &requiredStatusValues)
+		json.Unmarshal([]byte(v.Value), &requiredStatusValues)
 
-		flattenedRequiredStatusValues := []interface{}{}
-		for requiredStatusKey, requiredStatusValue := range requiredStatusValues {
-			flattenedRequiredStatusValues = append(flattenedRequiredStatusValues, map[string]interface{}{
-				"key":   requiredStatusKey,
-				"value": requiredStatusValue,
-			})
-		}
-
-		flattenedAction["required_status"] = flattenedRequiredStatusValues
+		flattenedAction["required_status"] = requiredStatusValues
 	}
 
 	return flattenedAction
 }
 
 func getDeployTransactJiraGateActionSchema() *schema.Schema {
-
-	actionSchema, element := getCommonDeploymentActionSchema()
+	actionSchema, element := getActionSchema()
 	addExecutionLocationSchema(element)
 	element.Schema["auth_key"] = &schema.Schema{
-		Description: "The name of the secret resource",
+		Description: "Auth Key secret",
 		Required:    true,
 		Type:        schema.TypeString,
 	}
 
 	element.Schema["required_status"] = &schema.Schema{
-		Type:     schema.TypeList,
-		Optional: true,
-		Elem: &schema.Resource{
-			Schema: map[string]*schema.Schema{
-				"key": {
-					Type:     schema.TypeString,
-					Required: true,
-				},
-				"value": {
-					Type:     schema.TypeString,
-					Required: true,
-				},
-			},
-		},
+		Elem:     &schema.Schema{Type: schema.TypeString},
+		Required: true,
+		Type:     schema.TypeMap,
 	}
 
 	return actionSchema
