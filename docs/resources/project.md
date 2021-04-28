@@ -6,7 +6,7 @@ description: |-
   This resource manages projects in Octopus Deploy.
 ---
 
-# Resource `octopusdeploy_project`
+# octopusdeploy_project (Resource)
 
 This resource manages projects in Octopus Deploy.
 
@@ -31,6 +31,16 @@ resource "octopusdeploy_project" "example" {
     allow_deployments_to_no_targets = false
     exclude_unhealthy_targets       = false
     skip_machine_behavior           = "SkipUnavailableMachines"
+  }
+
+  template {
+    default_value = "example-default-value"
+    help_text     = "example-help-test"
+    label         = "example-label"
+    name          = "example-template-value"
+    display_settings = {
+      "Octopus.ControlType" : "SingleLineText"
+    }
   }
 }
 ```
@@ -64,12 +74,12 @@ resource "octopusdeploy_project" "example" {
 - **release_creation_strategy** (Block List, Max: 1) (see [below for nested schema](#nestedblock--release_creation_strategy))
 - **release_notes_template** (String)
 - **space_id** (String) The space ID associated with this resource.
-- **templates** (Block List) (see [below for nested schema](#nestedblock--templates))
+- **template** (Block List) (see [below for nested schema](#nestedblock--template))
 - **tenanted_deployment_participation** (String) The tenanted deployment mode of the resource. Valid account types are `Untenanted`, `TenantedOrUntenanted`, or `Tenanted`.
 - **version_control_settings** (Block Set, Max: 1) (see [below for nested schema](#nestedblock--version_control_settings))
 - **versioning_strategy** (Block Set) (see [below for nested schema](#nestedblock--versioning_strategy))
 
-### Read-only
+### Read-Only
 
 - **deployment_process_id** (String)
 - **extension_settings** (Block Set) (see [below for nested schema](#nestedblock--extension_settings))
@@ -106,8 +116,8 @@ Optional:
 
 
 
-<a id="nestedblock--templates"></a>
-### Nested Schema for `templates`
+<a id="nestedblock--template"></a>
+### Nested Schema for `template`
 
 Required:
 
@@ -157,7 +167,7 @@ Optional:
 <a id="nestedblock--extension_settings"></a>
 ### Nested Schema for `extension_settings`
 
-Read-only:
+Read-Only:
 
 - **extension_id** (String)
 - **values** (List of String)

@@ -6,28 +6,26 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
-func expandActionTemplateParameter(tfTemplate map[string]interface{}) *octopusdeploy.ActionTemplateParameter {
+func expandActionTemplateParameter(tfTemplate map[string]interface{}) octopusdeploy.ActionTemplateParameter {
 	actionTemplateParameter := octopusdeploy.NewActionTemplateParameter()
 
-	propertyValue := octopusdeploy.PropertyValue(tfTemplate["default_value"].(string))
-	actionTemplateParameter.DefaultValue = &octopusdeploy.PropertyValueResource{
-		PropertyValue: &propertyValue,
-	}
+	propertyValue := octopusdeploy.NewPropertyValue(tfTemplate["default_value"].(string), false)
+	actionTemplateParameter.DefaultValue = &propertyValue
 	actionTemplateParameter.DisplaySettings = flattenDisplaySettings(tfTemplate["display_settings"].(map[string]interface{}))
 	actionTemplateParameter.HelpText = tfTemplate["help_text"].(string)
 	actionTemplateParameter.ID = tfTemplate["id"].(string)
 	actionTemplateParameter.Label = tfTemplate["label"].(string)
 	actionTemplateParameter.Name = tfTemplate["name"].(string)
 
-	return actionTemplateParameter
+	return *actionTemplateParameter
 }
 
-func expandActionTemplateParameters(actionTemplateParameters []interface{}) []*octopusdeploy.ActionTemplateParameter {
+func expandActionTemplateParameters(actionTemplateParameters []interface{}) []octopusdeploy.ActionTemplateParameter {
 	if len(actionTemplateParameters) == 0 {
 		return nil
 	}
 
-	expandedActionTemplateParameters := make([]*octopusdeploy.ActionTemplateParameter, len(actionTemplateParameters))
+	expandedActionTemplateParameters := []octopusdeploy.ActionTemplateParameter{}
 	for _, actionTemplateParameter := range actionTemplateParameters {
 		actionTemplateParameterMap := actionTemplateParameter.(map[string]interface{})
 		expandedActionTemplateParameters = append(expandedActionTemplateParameters, expandActionTemplateParameter(actionTemplateParameterMap))
@@ -35,11 +33,11 @@ func expandActionTemplateParameters(actionTemplateParameters []interface{}) []*o
 	return expandedActionTemplateParameters
 }
 
-func flattenActionTemplateParameters(actionTemplateParameters []*octopusdeploy.ActionTemplateParameter) []interface{} {
+func flattenActionTemplateParameters(actionTemplateParameters []octopusdeploy.ActionTemplateParameter) []interface{} {
 	flattenedActionTemplateParameters := make([]interface{}, 0)
 	for _, actionTemplateParameter := range actionTemplateParameters {
 		a := make(map[string]interface{})
-		a["default_value"] = actionTemplateParameter.DefaultValue.PropertyValue
+		a["default_value"] = actionTemplateParameter.DefaultValue.Value
 		a["display_settings"] = actionTemplateParameter.DisplaySettings
 		a["help_text"] = actionTemplateParameter.HelpText
 		a["id"] = actionTemplateParameter.ID

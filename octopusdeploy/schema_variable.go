@@ -9,30 +9,38 @@ import (
 )
 
 func expandVariable(d *schema.ResourceData) *octopusdeploy.Variable {
-	varName := d.Get("name").(string)
-	varType := d.Get("type").(string)
+	name := d.Get("name").(string)
 
-	var varDesc, varValue string
-	var varSensitive bool
+	variable := octopusdeploy.NewVariable(name)
 
-	if varDescInterface, ok := d.GetOk("description"); ok {
-		varDesc = varDescInterface.(string)
+	if v, ok := d.GetOk("description"); ok {
+		variable.Description = v.(string)
 	}
 
-	if varSensitiveInterface, ok := d.GetOk("is_sensitive"); ok {
-		varSensitive = varSensitiveInterface.(bool)
+	if v, ok := d.GetOk("is_editable"); ok {
+		variable.IsEditable = v.(bool)
 	}
 
-	if varSensitive {
-		varValue = d.Get("sensitive_value").(string)
+	if v, ok := d.GetOk("is_sensitive"); ok {
+		variable.IsSensitive = v.(bool)
+	}
+
+	if v, ok := d.GetOk("type"); ok {
+		variable.Type = v.(string)
+	}
+
+	if v, ok := d.GetOk("scope"); ok {
+		variable.Scope = expandVariableScope(v)
+	}
+
+	if variable.IsSensitive {
+		variable.Type = "Sensitive"
+		variable.Value = d.Get("sensitive_value").(string)
 	} else {
-		varValue = d.Get("value").(string)
+		variable.Value = d.Get("value").(string)
 	}
 
-	varScopeInterface := expandVariableScope(d)
-
-	newVar := octopusdeploy.NewVariable(varName, varType, varValue, varDesc, varScopeInterface, varSensitive)
-	newVar.ID = d.Id()
+	variable.ID = d.Id()
 
 	varPrompt, ok := d.GetOk("prompt")
 	if ok {
@@ -44,11 +52,11 @@ func expandVariable(d *schema.ResourceData) *octopusdeploy.Variable {
 				Label:       tfPromptList["label"].(string),
 				Required:    tfPromptList["is_required"].(bool),
 			}
-			newVar.Prompt = &newPrompt
+			variable.Prompt = &newPrompt
 		}
 	}
 
-	return newVar
+	return variable
 }
 
 func getVariableDataSchema() map[string]*schema.Schema {
@@ -74,12 +82,23 @@ func getVariableSchema() map[string]*schema.Schema {
 			Computed: true,
 			Type:     schema.TypeString,
 		},
+		"is_editable": {
+			Default:     true,
+			Description: "Indicates whether or not this variable is considered editable.",
+			Optional:    true,
+			Type:        schema.TypeBool,
+		},
 		"is_sensitive": getIsSensitiveSchema(),
 		"key_fingerprint": {
 			Computed: true,
 			Type:     schema.TypeString,
 		},
 		"name": getNameSchema(true),
+		"owner_id": {
+			ConflictsWith: []string{"project_id"},
+			Optional:      true,
+			Type:          schema.TypeString,
+		},
 		"pgp_key": {
 			ForceNew:  true,
 			Optional:  true,
@@ -87,8 +106,10 @@ func getVariableSchema() map[string]*schema.Schema {
 			Type:      schema.TypeString,
 		},
 		"project_id": {
-			Required: true,
-			Type:     schema.TypeString,
+			ConflictsWith: []string{"owner_id"},
+			Deprecated:    "This attribute is deprecated; please use owner_id instead.",
+			Optional:      true,
+			Type:          schema.TypeString,
 		},
 		"prompt": {
 			Elem:     &schema.Resource{Schema: getVariablePromptOptionsSchema()},
@@ -100,7 +121,7 @@ func getVariableSchema() map[string]*schema.Schema {
 			Elem:     &schema.Resource{Schema: getVariableScopeSchema()},
 			MaxItems: 1,
 			Optional: true,
-			Type:     schema.TypeSet,
+			Type:     schema.TypeList,
 		},
 		"sensitive_value": {
 			ConflictsWith: []string{"value"},
@@ -118,7 +139,12 @@ func getVariableSchema() map[string]*schema.Schema {
 }
 
 func setVariable(ctx context.Context, d *schema.ResourceData, variable *octopusdeploy.Variable) error {
+	if d == nil || variable == nil {
+		return fmt.Errorf("error setting scope")
+	}
+
 	d.Set("description", variable.Description)
+	d.Set("is_editable", variable.IsEditable)
 	d.Set("is_sensitive", variable.IsSensitive)
 	d.Set("name", variable.Name)
 	d.Set("type", variable.Type)

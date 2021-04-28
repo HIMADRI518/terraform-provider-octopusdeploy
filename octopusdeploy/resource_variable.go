@@ -26,25 +26,92 @@ func resourceVariable() *schema.Resource {
 }
 
 func resourceVariableImport(d *schema.ResourceData, m interface{}) ([]*schema.ResourceData, error) {
+	log.Printf("[INFO] importing variable (%s)", d.Id())
+
 	importStrings := strings.Split(d.Id(), ":")
 	if len(importStrings) != 2 {
-		return nil, fmt.Errorf("octopusdeploy_variable import must be in the form of ProjectID:VariableID (e.g. Projects-62:0906031f-68ba-4a15-afaa-657c1564e07b")
+		return nil, fmt.Errorf("octopusdeploy_variable import must be in the form of OwnerID:VariableID (e.g. Projects-62:0906031f-68ba-4a15-afaa-657c1564e07b")
 	}
 
-	d.Set("project_id", importStrings[0])
+	d.Set("owner_id", importStrings[0])
 	d.SetId(importStrings[1])
 
 	return []*schema.ResourceData{d}, nil
+}
+
+func resourceVariableCreate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+	mutex.Lock()
+	defer mutex.Unlock()
+
+	if err := validateVariable(d); err != nil {
+		return diag.FromErr(err)
+	}
+
+	projectID, projectOk := d.GetOk("project_id")
+	ownerID, ownerOk := d.GetOk("owner_id")
+
+	if !projectOk && !ownerOk {
+		return diag.Errorf("one of project_id or owner_id must be configured")
+	}
+
+	var variableOwnerID string
+
+	if projectOk {
+		variableOwnerID = projectID.(string)
+	} else {
+		variableOwnerID = ownerID.(string)
+	}
+
+	variable := expandVariable(d)
+
+	log.Printf("[INFO] creating variable: %#v", variable)
+
+	client := m.(*octopusdeploy.Client)
+	variableSet, err := client.Variables.AddSingle(variableOwnerID, variable)
+	if err != nil {
+		return diag.FromErr(err)
+	}
+
+	for _, v := range variableSet.Variables {
+		if v.Name == variable.Name && v.Type == variable.Type && (v.IsSensitive || v.Value == variable.Value) && v.Description == variable.Description && v.IsSensitive == variable.IsSensitive {
+			scopeMatches, _, err := client.Variables.MatchesScope(v.Scope, &variable.Scope)
+			if err != nil {
+				return diag.FromErr(err)
+			}
+			if scopeMatches {
+				d.SetId(v.ID)
+				log.Printf("[INFO] variable created (%s)", d.Id())
+				return nil
+			}
+		}
+	}
+
+	d.SetId("")
+	return diag.Errorf("unable to locate variable for owner ID, %s", variableOwnerID)
 }
 
 func resourceVariableRead(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	log.Printf("[INFO] reading variable (%s)", d.Id())
 
 	id := d.Id()
-	projectID := d.Get("project_id").(string)
+
+	projectID, projectOk := d.GetOk("project_id")
+	ownerID, ownerOk := d.GetOk("owner_id")
+
+	if !projectOk && !ownerOk {
+		return diag.Errorf("one of project_id or owner_id must be configured")
+	}
+
+	var variableOwnerID string
+
+	if projectOk {
+		variableOwnerID = projectID.(string)
+	} else {
+		variableOwnerID = ownerID.(string)
+	}
 
 	client := m.(*octopusdeploy.Client)
-	variable, err := client.Variables.GetByID(projectID, id)
+	variable, err := client.Variables.GetByID(variableOwnerID, id)
 	if err != nil {
 		apiError := err.(*octopusdeploy.APIError)
 		if apiError.StatusCode == 404 {
@@ -63,66 +130,46 @@ func resourceVariableRead(ctx context.Context, d *schema.ResourceData, m interfa
 	return nil
 }
 
-func resourceVariableCreate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+func resourceVariableUpdate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	mutex.Lock()
 	defer mutex.Unlock()
-	if err := validateVariable(d); err != nil {
-		return diag.FromErr(err)
-	}
 
-	projID := d.Get("project_id").(string)
-	newVariable := expandVariable(d)
-
-	log.Printf("[INFO] creating variable: %#v", newVariable)
-
-	client := m.(*octopusdeploy.Client)
-	tfVar, err := client.Variables.AddSingle(projID, newVariable)
-	if err != nil {
-		return diag.FromErr(err)
-	}
-
-	for _, v := range tfVar.Variables {
-		if v.Name == newVariable.Name && v.Type == newVariable.Type && (v.IsSensitive || v.Value == newVariable.Value) && v.Description == newVariable.Description && v.IsSensitive == newVariable.IsSensitive {
-			scopeMatches, _, err := client.Variables.MatchesScope(v.Scope, newVariable.Scope)
-			if err != nil {
-				return diag.FromErr(err)
-			}
-			if scopeMatches {
-				d.SetId(v.ID)
-				log.Printf("[INFO] variable created (%s)", d.Id())
-				return nil
-			}
-		}
-	}
-
-	d.SetId("")
-	return diag.Errorf("unable to locate variable in project %s", projID)
-}
-
-func resourceVariableUpdate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	log.Printf("[INFO] updating variable (%s)", d.Id())
 
-	mutex.Lock()
-	defer mutex.Unlock()
-
 	if err := validateVariable(d); err != nil {
 		return diag.FromErr(err)
 	}
 
-	tfVar := expandVariable(d)
-	projID := d.Get("project_id").(string)
+	variable := expandVariable(d)
+
+	projectID, projectOk := d.GetOk("project_id")
+	ownerID, ownerOk := d.GetOk("owner_id")
+
+	if !projectOk && !ownerOk {
+		return diag.Errorf("one of project_id or owner_id must be configured")
+	}
+
+	var variableOwnerID string
+
+	if projectOk {
+		variableOwnerID = projectID.(string)
+	} else {
+		variableOwnerID = ownerID.(string)
+	}
 
 	client := m.(*octopusdeploy.Client)
-	updatedVars, err := client.Variables.UpdateSingle(projID, tfVar)
+	variableSet, err := client.Variables.UpdateSingle(variableOwnerID, variable)
 	if err != nil {
 		return diag.FromErr(err)
 	}
 
-	for _, v := range updatedVars.Variables {
-		if v.Name == tfVar.Name && v.Type == tfVar.Type && (v.IsSensitive || v.Value == tfVar.Value) && v.Description == tfVar.Description && v.IsSensitive == tfVar.IsSensitive {
-			scopeMatches, _, _ := client.Variables.MatchesScope(v.Scope, tfVar.Scope)
+	for _, v := range variableSet.Variables {
+		if v.Name == variable.Name && v.Type == variable.Type && (v.IsSensitive || v.Value == variable.Value) && v.Description == variable.Description && v.IsSensitive == variable.IsSensitive {
+			scopeMatches, _, _ := client.Variables.MatchesScope(v.Scope, &variable.Scope)
 			if scopeMatches {
-				d.SetId(v.ID)
+				if err := setVariable(ctx, d, v); err != nil {
+					return diag.FromErr(err)
+				}
 				log.Printf("[INFO] variable updated (%s)", d.Id())
 				return nil
 			}
@@ -130,20 +177,39 @@ func resourceVariableUpdate(ctx context.Context, d *schema.ResourceData, m inter
 	}
 
 	d.SetId("")
-	return diag.Errorf("unable to locate variable in project %s", projID)
+	return diag.Errorf("unable to locate variable for owner ID, %s", variableOwnerID)
 }
 
 func resourceVariableDelete(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
-	log.Printf("[INFO] deleting variable (%s)", d.Id())
-
 	mutex.Lock()
 	defer mutex.Unlock()
 
-	projID := d.Get("project_id").(string)
+	log.Printf("[INFO] deleting variable (%s)", d.Id())
+
+	projectID, projectOk := d.GetOk("project_id")
+	ownerID, ownerOk := d.GetOk("owner_id")
+
+	if !projectOk && !ownerOk {
+		return diag.Errorf("one of project_id or owner_id must be configured")
+	}
+
+	var variableOwnerID string
+
+	if projectOk {
+		variableOwnerID = projectID.(string)
+	} else {
+		variableOwnerID = ownerID.(string)
+	}
 
 	client := m.(*octopusdeploy.Client)
-	_, err := client.Variables.DeleteSingle(projID, d.Id())
+	_, err := client.Variables.DeleteSingle(variableOwnerID, d.Id())
 	if err != nil {
+		apiError := err.(*octopusdeploy.APIError)
+		if apiError.StatusCode == 404 {
+			log.Printf("[INFO] variable (%s) not found; deleting from state", d.Id())
+			d.SetId("")
+			return nil
+		}
 		return diag.FromErr(err)
 	}
 

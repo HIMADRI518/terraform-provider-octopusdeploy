@@ -21,6 +21,17 @@ func TestAccOctopusDeployVariableBasic(t *testing.T) {
 	value := acctest.RandStringFromCharSet(20, acctest.CharSetAlpha)
 	variableType := "String"
 
+	channelLocalName := acctest.RandStringFromCharSet(20, acctest.CharSetAlpha)
+	channelName := acctest.RandStringFromCharSet(20, acctest.CharSetAlpha)
+	environmentLocalName := acctest.RandStringFromCharSet(20, acctest.CharSetAlpha)
+	environmentName := acctest.RandStringFromCharSet(20, acctest.CharSetAlpha)
+	lifecycleLocalName := acctest.RandStringFromCharSet(20, acctest.CharSetAlpha)
+	lifecycleName := acctest.RandStringFromCharSet(20, acctest.CharSetAlpha)
+	projectGroupLocalName := acctest.RandStringFromCharSet(20, acctest.CharSetAlpha)
+	projectGroupName := acctest.RandStringFromCharSet(20, acctest.CharSetAlpha)
+	projectLocalName := acctest.RandStringFromCharSet(20, acctest.CharSetAlpha)
+	projectName := acctest.RandStringFromCharSet(20, acctest.CharSetAlpha)
+
 	resource.Test(t, resource.TestCase{
 		CheckDestroy: testVariableDestroy,
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -31,28 +42,28 @@ func TestAccOctopusDeployVariableBasic(t *testing.T) {
 					testOctopusDeployVariableExists(prefix),
 					resource.TestCheckResourceAttr(prefix, "name", name),
 					resource.TestCheckResourceAttr(prefix, "description", description),
-					resource.TestCheckResourceAttrSet(prefix, "project_id"),
+					resource.TestCheckResourceAttrSet(prefix, "owner_id"),
 					resource.TestCheckResourceAttr(prefix, "type", variableType),
 					resource.TestCheckResourceAttr(prefix, "value", value),
 					resource.TestCheckResourceAttr(prefix, "scope.#", "1"),
-					resource.TestCheckResourceAttr(prefix, "scope.0.%", "14"),
+					resource.TestCheckResourceAttr(prefix, "scope.0.%", "6"),
 					resource.TestCheckResourceAttr(prefix, "scope.0.environments.#", "1"),
 				),
-				Config: testVariableBasic(localName, name, description, isSensitive, value, variableType),
+				Config: testVariableBasic(environmentLocalName, environmentName, lifecycleLocalName, lifecycleName, projectGroupLocalName, projectGroupName, projectLocalName, projectName, channelLocalName, channelName, localName, name, description, isSensitive, value, variableType),
 			},
 			{
 				Check: resource.ComposeTestCheckFunc(
 					testOctopusDeployVariableExists(prefix),
 					resource.TestCheckResourceAttr(prefix, "name", name),
 					resource.TestCheckResourceAttr(prefix, "description", description),
-					resource.TestCheckResourceAttrSet(prefix, "project_id"),
+					resource.TestCheckResourceAttrSet(prefix, "owner_id"),
 					resource.TestCheckResourceAttr(prefix, "type", variableType),
 					resource.TestCheckResourceAttr(prefix, "value", newValue),
 					resource.TestCheckResourceAttr(prefix, "scope.#", "1"),
-					resource.TestCheckResourceAttr(prefix, "scope.0.%", "14"),
+					resource.TestCheckResourceAttr(prefix, "scope.0.%", "6"),
 					resource.TestCheckResourceAttr(prefix, "scope.0.environments.#", "1"),
 				),
-				Config: testVariableBasic(localName, name, description, isSensitive, newValue, variableType),
+				Config: testVariableBasic(environmentLocalName, environmentName, lifecycleLocalName, lifecycleName, projectGroupLocalName, projectGroupName, projectLocalName, projectName, channelLocalName, channelName, localName, name, description, isSensitive, newValue, variableType),
 			},
 			// {
 			// 	ResourceName:      prefix,
@@ -63,62 +74,120 @@ func TestAccOctopusDeployVariableBasic(t *testing.T) {
 	})
 }
 
-func testVariableBasic(localName string, name string, description string, isSensitive bool, value string, variableType string) string {
-	return fmt.Sprintf(`resource "octopusdeploy_environment" "test-environment" {
-	      name = "Test Environment (OK to Delete)"
+func TestAccOctopusDeployVariableSchemaValidation(t *testing.T) {
+	localName := acctest.RandStringFromCharSet(20, acctest.CharSetAlpha)
+	prefix := "octopusdeploy_variable." + localName
+	name := acctest.RandStringFromCharSet(20, acctest.CharSetAlpha)
+	projectID := acctest.RandStringFromCharSet(20, acctest.CharSetAlpha)
+
+	resource.Test(t, resource.TestCase{
+		CheckDestroy: testVariableDestroy,
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		Steps: []resource.TestStep{
+			{
+				Check: resource.ComposeTestCheckFunc(
+					testOctopusDeployVariableExists(prefix),
+					resource.TestCheckResourceAttr(prefix, "name", name),
+				),
+				Config: testAccVariableSchemaValidation(localName, name, projectID),
+			},
+		},
+	})
+}
+
+func testVariableBasic(environmentLocalName string,
+	environmentName string,
+	lifecycleLocalName string, lifecycleName string, projectGroupLocalName string, projectGroupName string, projectLocalName string, projectName string, channelLocalName string, channelName string, localName string, name string, description string, isSensitive bool, value string, variableType string) string {
+	return fmt.Sprintf(`resource "octopusdeploy_environment" "%s" {
+	      name = "%s"
 		}
 
-		resource "octopusdeploy_lifecycle" "test-lifecycle" {
-		  name = "Test Lifecycle (OK to Delete)"
+		resource "octopusdeploy_lifecycle" "%s" {
+		  name = "%s"
 		}
 
-		resource "octopusdeploy_project_group" "test-project-group" {
-		  name = "Test Project Group (OK to Delete)"
+		resource "octopusdeploy_project_group" "%s" {
+		  name = "%s"
 		}
 
-		resource "octopusdeploy_project" "test-project" {
-		  lifecycle_id = octopusdeploy_lifecycle.test-lifecycle.id
-		  name = "Test Project (OK to Delete)"
-		  project_group_id = octopusdeploy_project_group.test-project-group.id
+		resource "octopusdeploy_project" "%s" {
+		  lifecycle_id     = octopusdeploy_lifecycle.%s.id
+		  name             = "%s"
+		  project_group_id = octopusdeploy_project_group.%s.id
 		}
 
-		resource "octopusdeploy_channel" "test-channel" {
-		  name = "Test Channel (OK to Delete)"
-		  project_id = octopusdeploy_project.test-project.id
+		resource "octopusdeploy_channel" "%s" {
+		  name       = "%s"
+		  project_id = octopusdeploy_project.%s.id
 		}
 
 		resource "octopusdeploy_variable" "%s" {
-		  description = "%s"
+		  description  = "%s"
 		  is_sensitive = "%v"
-		  name = "%s"
-		  project_id = octopusdeploy_project.test-project.id
-		  type = "%s"
-		  value = "%s"
+		  name         = "%s"
+		  owner_id     = octopusdeploy_project.%s.id
+		  type         = "%s"
+		  value        = "%s"
 
 		  scope {
-			channels = [octopusdeploy_channel.test-channel.id]
-		    environments = [octopusdeploy_environment.test-environment.id]
+			channels     = [octopusdeploy_channel.%s.id]
+		    environments = [octopusdeploy_environment.%s.id]
+			tenant_tags  = ["Tenants-5241"]
 		  }
-		}`, localName, description, isSensitive, name, variableType, value)
+		}`,
+		environmentLocalName,
+		environmentName,
+		lifecycleLocalName,
+		lifecycleName,
+		projectGroupLocalName,
+		projectGroupName,
+		projectLocalName,
+		lifecycleLocalName,
+		projectName,
+		projectGroupLocalName,
+		channelLocalName,
+		channelName,
+		projectLocalName,
+		localName,
+		description,
+		isSensitive,
+		name,
+		projectLocalName,
+		variableType,
+		value,
+		channelLocalName,
+		environmentLocalName,
+	)
+}
+
+func testAccVariableSchemaValidation(localName string, name string, projectID string) string {
+	return fmt.Sprintf(`resource "octopusdeploy_variable" "%s" {
+		name       = "%s"
+		owner_id   = "%s"
+		type       = "String"
+		value      = "1"
+	  }`, localName, name, projectID)
 }
 
 func testOctopusDeployVariableExists(n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		var projectID string
+		var ownerID string
 		var variableID string
 
 		for _, r := range s.RootModule().Resources {
 			if r.Type == "octopusdeploy_project" {
-				projectID = r.Primary.ID
+				ownerID = r.Primary.ID
 			}
 
 			if r.Type == "octopusdeploy_variable" {
+				ownerID = r.Primary.Attributes["owner_id"]
 				variableID = r.Primary.ID
 			}
 		}
 
 		client := testAccProvider.Meta().(*octopusdeploy.Client)
-		if _, err := client.Variables.GetByID(projectID, variableID); err != nil {
+		if _, err := client.Variables.GetByID(ownerID, variableID); err != nil {
 			return fmt.Errorf("error retrieving variable %s", err)
 		}
 
@@ -127,12 +196,12 @@ func testOctopusDeployVariableExists(n string) resource.TestCheckFunc {
 }
 
 func testVariableDestroy(s *terraform.State) error {
-	var projectID string
+	var ownerID string
 	var variableID string
 
 	for _, r := range s.RootModule().Resources {
 		if r.Type == "octopusdeploy_project" {
-			projectID = r.Primary.ID
+			ownerID = r.Primary.ID
 		}
 
 		if r.Type == "octopusdeploy_variable" {
@@ -141,7 +210,7 @@ func testVariableDestroy(s *terraform.State) error {
 	}
 
 	client := testAccProvider.Meta().(*octopusdeploy.Client)
-	variable, err := client.Variables.GetByID(projectID, variableID)
+	variable, err := client.Variables.GetByID(ownerID, variableID)
 	if err == nil {
 		if variable != nil {
 			return fmt.Errorf("variable (%s) still exists", variableID)

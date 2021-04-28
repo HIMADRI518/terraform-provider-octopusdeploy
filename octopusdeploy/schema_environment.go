@@ -77,9 +77,10 @@ func getEnvironmentSchema() map[string]*schema.Schema {
 		"id":          getIDSchema(),
 		"name":        getNameSchema(true),
 		"sort_order": {
-			Type:     schema.TypeInt,
-			Optional: true,
-			Default:  false,
+			Computed:    true,
+			Description: "The order number to sort an environment.",
+			Optional:    true,
+			Type:        schema.TypeInt,
 		},
 		"use_guided_failure": {
 			Optional: true,

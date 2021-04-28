@@ -4,7 +4,6 @@ import (
 	"net/url"
 
 	"github.com/transactcampus/go-octopusdeploy/octopusdeploy"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func expandKubernetesCluster(flattenedMap map[string]interface{}) *octopusdeploy.KubernetesEndpoint {
@@ -13,7 +12,7 @@ func expandKubernetesCluster(flattenedMap map[string]interface{}) *octopusdeploy
 	endpoint := octopusdeploy.NewKubernetesEndpoint(clusterURL)
 	endpoint.Authentication = expandKubernetesAuthentication(flattenedMap["authentication"])
 	endpoint.ClusterCertificate = flattenedMap["cluster_certificate"].(string)
-	endpoint.Container = expandDeploymentActionContainer(flattenedMap["container"])
+	endpoint.Container = expandContainer(flattenedMap["container"])
 	endpoint.DefaultWorkerPoolID = flattenedMap["default_worker_pool_id"].(string)
 	endpoint.ID = flattenedMap["id"].(string)
 	endpoint.Namespace = flattenedMap["namespace"].(string)
@@ -63,117 +62,4 @@ func expandKubernetesCluster(flattenedMap map[string]interface{}) *octopusdeploy
 	// }
 
 	return endpoint
-}
-
-func flattenKubernetesCluster(endpoint *octopusdeploy.KubernetesEndpoint) []interface{} {
-	if endpoint == nil {
-		return nil
-	}
-
-	flattenedEndpoint := map[string]interface{}{
-		"cluster_certificate":    endpoint.ClusterCertificate,
-		"container":              flattenDeploymentActionContainer(endpoint.Container),
-		"default_worker_pool_id": endpoint.DefaultWorkerPoolID,
-		"id":                     endpoint.GetID(),
-		"namespace":              endpoint.Namespace,
-		"proxy_id":               endpoint.ProxyID,
-		"running_in_container":   endpoint.RunningInContainer,
-		"skip_tls_verification":  endpoint.SkipTLSVerification,
-	}
-
-	if endpoint.ClusterURL != nil {
-		flattenedEndpoint["cluster_url"] = endpoint.ClusterURL.String()
-	}
-
-	switch endpoint.Authentication.GetAuthenticationType() {
-	case "KubernetesAws":
-		flattenedEndpoint["aws_account_authentication"] = flattenKubernetesAwsAuthentication(endpoint.Authentication.(*octopusdeploy.KubernetesAwsAuthentication))
-	case "KubernetesAzure":
-		flattenedEndpoint["azure_service_principal_authentication"] = flattenKubernetesAzureAuthentication(endpoint.Authentication.(*octopusdeploy.KubernetesAzureAuthentication))
-	case "KubernetesCertificate":
-		flattenedEndpoint["certificate_authentication"] = flattenKubernetesCertificateAuthentication(endpoint.Authentication.(*octopusdeploy.KubernetesCertificateAuthentication))
-	case "KubernetesStandard":
-		flattenedEndpoint["authentication"] = flattenKubernetesStandardAuthentication(endpoint.Authentication.(*octopusdeploy.KubernetesStandardAuthentication))
-	case "None":
-		flattenedEndpoint["authentication"] = flattenKubernetesStandardAuthentication(endpoint.Authentication.(*octopusdeploy.KubernetesStandardAuthentication))
-	}
-
-	return []interface{}{flattenedEndpoint}
-}
-
-func getKubernetesClusterSchema() map[string]*schema.Schema {
-	return map[string]*schema.Schema{
-		"authentication": {
-			Computed:     true,
-			Elem:         &schema.Resource{Schema: getKubernetesAuthenticationSchema()},
-			ExactlyOneOf: []string{"authentication", "aws_account_authentication", "azure_service_principal_authentication", "certificate_authentication"},
-			MaxItems:     1,
-			MinItems:     0,
-			Optional:     true,
-			Type:         schema.TypeList,
-		},
-		"aws_account_authentication": {
-			Computed:     true,
-			Elem:         &schema.Resource{Schema: getKubernetesAwsAuthenticationSchema()},
-			ExactlyOneOf: []string{"authentication", "aws_account_authentication", "azure_service_principal_authentication", "certificate_authentication"},
-			MaxItems:     1,
-			MinItems:     0,
-			Optional:     true,
-			Type:         schema.TypeList,
-		},
-		"azure_service_principal_authentication": {
-			Computed:     true,
-			Elem:         &schema.Resource{Schema: getKubernetesAzureAuthenticationSchema()},
-			ExactlyOneOf: []string{"authentication", "aws_account_authentication", "azure_service_principal_authentication", "certificate_authentication"},
-			MaxItems:     1,
-			MinItems:     0,
-			Optional:     true,
-			Type:         schema.TypeList,
-		},
-		"certificate_authentication": {
-			Computed:     true,
-			Elem:         &schema.Resource{Schema: getKubernetesCertificateAuthenticationSchema()},
-			ExactlyOneOf: []string{"authentication", "aws_account_authentication", "azure_service_principal_authentication", "certificate_authentication"},
-			MaxItems:     1,
-			MinItems:     0,
-			Optional:     true,
-			Type:         schema.TypeList,
-		},
-		"cluster_certificate": {
-			Optional: true,
-			Type:     schema.TypeString,
-		},
-		"cluster_url": {
-			Required: true,
-			Type:     schema.TypeString,
-		},
-		"container": {
-			Computed:    true,
-			Description: "The deployment action container associated with this Kubernetes cluster.",
-			Elem:        &schema.Resource{Schema: getDeploymentActionContainerSchema()},
-			Optional:    true,
-			Type:        schema.TypeList,
-		},
-		"default_worker_pool_id": {
-			Optional: true,
-			Type:     schema.TypeString,
-		},
-		"id": getIDSchema(),
-		"namespace": {
-			Optional: true,
-			Type:     schema.TypeString,
-		},
-		"proxy_id": {
-			Optional: true,
-			Type:     schema.TypeString,
-		},
-		"running_in_container": {
-			Optional: true,
-			Type:     schema.TypeBool,
-		},
-		"skip_tls_verification": {
-			Optional: true,
-			Type:     schema.TypeBool,
-		},
-	}
 }
