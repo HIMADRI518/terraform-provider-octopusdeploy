@@ -32,7 +32,7 @@ require (
 	github.com/mitchellh/mapstructure v1.4.1 // indirect
 	github.com/oklog/run v1.1.0 // indirect
 	github.com/stretchr/testify v1.7.0
-	github.com/transactcampus/go-octopusdeploy v1.7.14-tc
+	github.com/transactcampus/go-octopusdeploy v1.7.23-tc2
 	github.com/ulikunitz/xz v0.5.10 // indirect
 	golang.org/x/crypto v0.0.0-20210421170649-83a5a9bb288b // indirect
 	golang.org/x/net v0.0.0-20210427231257-85d9c07bbe3a // indirect
