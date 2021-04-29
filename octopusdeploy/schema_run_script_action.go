@@ -3,8 +3,8 @@ package octopusdeploy
 import (
 	"strconv"
 
-	"github.com/transactcampus/go-octopusdeploy/octopusdeploy"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/transactcampus/go-octopusdeploy/octopusdeploy"
 )
 
 func addScriptFromPackageSchema(element *schema.Resource) {
@@ -59,6 +59,10 @@ func expandRunScriptAction(flattenedAction map[string]interface{}) octopusdeploy
 		}
 	}
 
+	if v, ok := flattenedAction["worker_pool_id"]; ok {
+		action.WorkerPoolID = v.(string)
+	}
+
 	if variableSubstitutionInFiles, ok := flattenedAction["variable_substitution_in_files"]; ok {
 		action.Properties["Octopus.Action.SubstituteInFiles.TargetFiles"] = octopusdeploy.NewPropertyValue(variableSubstitutionInFiles.(string), false)
 		action.Properties["Octopus.Action.SubstituteInFiles.Enabled"] = octopusdeploy.NewPropertyValue("True", false)
@@ -106,6 +110,8 @@ func flattenRunScriptAction(action octopusdeploy.DeploymentAction) map[string]in
 		flattenedAction["variable_substitution_in_files"] = v.Value
 	}
 
+	flattenedAction["worker_pool_id"] = action.WorkerPoolID
+
 	return flattenedAction
 }
 
@@ -114,6 +120,7 @@ func getRunScriptActionSchema() *schema.Schema {
 	addExecutionLocationSchema(element)
 	addScriptFromPackageSchema(element)
 	addPackagesSchema(element, false)
+	addWorkerPoolSchema(element)
 
 	element.Schema["script_body"] = &schema.Schema{
 		Optional: true,
